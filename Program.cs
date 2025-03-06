@@ -1,4 +1,10 @@
 
+using Microsoft.EntityFrameworkCore;
+using RestApiCvManager.Data;
+using RestApiCvManager.Endpoints.EducationEndpoints.cs;
+using RestApiCvManager.Endpoints.ExperienceEndpoints;
+using RestApiCvManager.Endpoints.PersonEndpoints;
+
 namespace RestApiCvManager
 {
     public class Program
@@ -14,6 +20,11 @@ namespace RestApiCvManager
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.AddDbContext<CvManagerDbContext>(options =>
+            {
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -27,7 +38,10 @@ namespace RestApiCvManager
 
             app.UseAuthorization();
 
-           
+            PersonEndpoints.RegisterPersonEndpoints(app);
+            ExperienceEndpoints.RegisterExperienceEndpoints(app);
+            EducationEndpoints.RegisterEducationEndpoints(app);
+
 
             app.Run();
         }

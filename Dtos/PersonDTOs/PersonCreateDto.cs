@@ -6,10 +6,7 @@ namespace RestApiCvManager.Dtos.PersonDTOs
 {
     public class PersonCreateDto
     {
-        [Key]
-        public int Id { get; set; }
-
-
+       
         [Required]
         [EmailAddress]
 
@@ -24,7 +21,6 @@ namespace RestApiCvManager.Dtos.PersonDTOs
         [MaxLength(11)] //swedish number
         public string PersonPhone { get; set; }
 
-        public List<EducationDto>? Educations { get; set; }
-        public List<ExperienceDto>? Experiences { get; set; }
+       
     }
 }

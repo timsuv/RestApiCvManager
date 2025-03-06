@@ -12,93 +12,69 @@ namespace RestApiCvManager.Endpoints.EducationEndpoints.cs
         public static void RegisterEducationEndpoints(WebApplication app)
         {
 
-            app.MapPost("/education/{personId}", async (CvManagerDbContext context, int personId, EducationDto newEducation) =>
+            app.MapPost("/education/{personId}", async (EducationService useService, int personId, EducationDto newEducation) =>
             {
-
-                var personToFind = await context.Persons
-                .Include(p => p.Educations)
-                .FirstOrDefaultAsync(p => p.Id == personId);
-
-                if (personToFind == null)
+                try
                 {
-                    return Results.NotFound();
+                    var education = await useService.AddEducation(personId, newEducation);
+                    return Results.Ok(newEducation);
                 }
-
-               var validationsResults = ValidatorHelper.ValidateInput(newEducation);
-                if (validationsResults.Count > 0)
+                catch (ArgumentException ex)
                 {
-                    return Results.BadRequest(validationsResults);
+                    return Results.BadRequest(ex.Message);
                 }
-
-
-                var education = new Education
+                catch (KeyNotFoundException ex)
                 {
-                    School = newEducation.PersonSchool,
-                    Degree = newEducation.SchoolDegree,
-                    StartDate = newEducation.SchoolStartDate,
-                    EndDate = newEducation.SchoolEndDate,
-                    Person = personToFind
+                    return Results.NotFound(ex.Message);
+                }
+               
 
-                };
-                personToFind.Educations.Add(education);
-                await context.SaveChangesAsync();
-                return Results.Ok(newEducation);
 
             });
 
-            app.MapPut("education/{id}", async (CvManagerDbContext context, int id, EducationDto education) =>
+            app.MapPut("education/{id}", async (EducationService useService, int id, EducationDto education) =>
             {
-                var validationsResults = ValidatorHelper.ValidateInput(education);
-                if (validationsResults.Count > 0)
+                try
                 {
-                    return Results.BadRequest(validationsResults);
+                    var updatedEducation = await useService.ChangeEducationById(id, education);
+                    return Results.Ok(updatedEducation);
                 }
-
-
-                var educationToChange = await context.Educations.FirstOrDefaultAsync(e => e.Id == id);
-
-                if (educationToChange == null)
+                catch (ArgumentException ex)
                 {
-                    return Results.NotFound();
+                    return Results.BadRequest(ex.Message);
                 }
-                educationToChange.School = education.SchoolDegree;
-                educationToChange.Degree = education.SchoolDegree;
-                educationToChange.StartDate = education.SchoolStartDate;
-                educationToChange.EndDate = education.SchoolEndDate;
-
-                await context.SaveChangesAsync();
-
-                return Results.Ok(education);
+                catch (KeyNotFoundException ex)
+                {
+                    return Results.NotFound(ex.Message);
+                }
 
             });
 
-            app.MapDelete("education/{id}", async (CvManagerDbContext context, int id) =>
+            app.MapDelete("education/{id}", async (EducationService useService, int id) =>
             {
-                var educationToDelete = await context.Educations.FirstOrDefaultAsync(e => e.Id == id);
-                if (educationToDelete == null)
+                try
                 {
-                    return Results.NotFound();
+                    var deletedEducation = await useService.DeleteEducation(id);
+                    return Results.Ok(deletedEducation);
                 }
-                context.Educations.Remove(educationToDelete);
-                await context.SaveChangesAsync();
-                return Results.Ok($"You have deleted education with id {id}");
+                catch (KeyNotFoundException ex)
+                {
+                    return Results.NotFound(ex.Message);
+                }
+
             });
 
-            app.MapGet("education/{id}", async (CvManagerDbContext context, int id) =>
+            app.MapGet("education/{id}", async (EducationService useService, int id) =>
             {
-                var education = await context.Educations.FirstOrDefaultAsync(e => e.Id == id);
-                if (education == null)
+                try
                 {
-                    return Results.NotFound();
+                    var education = await useService.GetEducationById(id);
+                    return Results.Ok(education);
                 }
-                var educationFound = new EducationDto
+                catch (KeyNotFoundException ex)
                 {
-                    PersonSchool = education.School,
-                    SchoolDegree = education.Degree,
-                    SchoolStartDate = education.StartDate,
-                    SchoolEndDate = education.EndDate
-                };
-                return Results.Ok(educationFound);
+                    return Results.NotFound(ex.Message);
+                }
             });
         }
     }

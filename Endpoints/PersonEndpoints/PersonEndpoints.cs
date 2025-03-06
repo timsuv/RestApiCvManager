@@ -14,102 +14,48 @@ namespace RestApiCvManager.Endpoints.PersonEndpoints
     {
         public static void RegisterPersonEndpoints(WebApplication app)
         {
-            app.MapGet("/persons", async (CvManagerDbContext context) =>
+            app.MapGet("/persons", async (PersonService useService) =>
             {
-                var persons = await context.Persons
-                .Include(p => p.Educations)
-                .Include(p => p.Experiences)
-                    .Select(p => new PersonDto
-                    {
-                        PersonName = p.Name,
-                        PersonEmail = p.Email,
-                        PersonPhone = p.Phone,
-                        PersonDescription = p.Description,
-                        Educations = p.Educations.Select(e => new EducationDto
-                        {
-                            PersonSchool = e.School,
-                            SchoolDegree = e.Degree,
-                            SchoolStartDate = e.StartDate,
-                            SchoolEndDate = e.EndDate
-                        }).ToList(),
-                        Experiences = p.Experiences.Select(e => new ExperienceDto
-                        {
-                            PersonCompany = e.Company,
-                            PersonTitle = e.Title,
-                            AmountYears = e.Years,
-                            TitleDescription = e.Description
+                try
+                {
+                    var persons = await useService.GetAllUsers();
+                    return Results.Ok(persons);
 
-                        }).ToList()
-                    })
-                    .ToListAsync();
-
-                return Results.Ok(persons);
+                }
+                catch (KeyNotFoundException)
+                {
+                    return Results.NotFound("No persons found");
+                }
             });
 
-            app.MapGet("/person/{id}", async (CvManagerDbContext context, int id) =>
+            app.MapGet("/person/{id}", async (PersonService useService, int id) =>
             {
-                var person = await context.Persons
-               .Include(p => p.Educations)
-               .Include(p => p.Experiences)
-               .FirstOrDefaultAsync(p => p.Id == id);
-
-
-                if (person == null)
+                try
                 {
-                    return Results.NotFound();
+                    var person = await useService.GetUserById(id);
+                    return Results.Ok(person);
                 }
-                var personDTO = new PersonDto
+                catch (KeyNotFoundException)
                 {
-                    PersonName = person.Name,
-                    PersonEmail = person.Email,
-                    PersonPhone = person.Phone,
-                    PersonDescription = person.Description,
-                    Educations = person.Educations.Select(
-                        e => new EducationDto
-                        {
-                            PersonSchool = e.School,
-                            SchoolDegree = e.Degree,
-                            SchoolStartDate = e.StartDate,
-                            SchoolEndDate = e.EndDate
-                        }).ToList(),
-                    Experiences = person.Experiences.Select(
-                        e => new ExperienceDto
-                        {
-                            PersonCompany = e.Company,
-                            PersonTitle = e.Title,
-                            AmountYears = e.Years,
-                            TitleDescription = e.Description
-                        }).ToList()
-                };
-
-                return Results.Ok(personDTO);
-
+                    return Results.NotFound("Person not found");
+                }
             });
 
-            app.MapPut("person/{id}", async (CvManagerDbContext context, int id, PersonDto person) =>
+            app.MapPut("person/{id}", async (PersonService userService, int id, PersonCreateDto person) =>
             {
-                var validationsResults = ValidatorHelper.ValidateInput(person);
-                if (validationsResults.Count > 0)
+                try
                 {
-                    return Results.BadRequest(validationsResults);
+                    var personToChange = await userService.ChangeUserById(id, person);
+                    return Results.Ok(personToChange);
                 }
-
-
-                var personToChange = await context.Persons.FirstOrDefaultAsync(e => e.Id == id);
-
-                if (personToChange == null)
+                catch (ArgumentException ex)
                 {
-                    return Results.NotFound();
+                    return Results.BadRequest(ex.Message);
                 }
-                personToChange.Name = person.PersonName;
-                personToChange.Phone = person.PersonPhone;
-                personToChange.Email = person.PersonEmail;
-                personToChange.Description = person.PersonDescription;
-
-                await context.SaveChangesAsync();
-
-                return Results.Ok(person);
-
+                catch (KeyNotFoundException)
+                {
+                    return Results.NotFound("Person not found");
+                }
             });
 
 

@@ -12,100 +12,74 @@ namespace RestApiCvManager.Endpoints.ExperienceEndpoints
         public static void RegisterExperienceEndpoints(WebApplication app)
         {
 
-            app.MapPost("/experience/{personId}", async (CvManagerDbContext context, int personId, ExperienceDto newExperience) =>
+            app.MapPost("/experience/{personId}", async (ExperienceService service, int personId, ExperienceDto newExperience) =>
             {
 
-                var validationsResults = ValidatorHelper.ValidateInput(newExperience);
-                if (validationsResults.Count > 0)
+                try
                 {
-                    return Results.BadRequest(validationsResults);
+                    var experience = await service.AddExperience(newExperience, personId);
+                    return Results.Ok(newExperience);
                 }
-
-                var personToFind = await context.Persons
-                .Include(p => p.Experiences)
-                .FirstOrDefaultAsync(p => p.Id == personId);
-
-                if (personToFind == null)
+                catch (ArgumentException ex)
                 {
-                    return Results.NotFound();
+                    return Results.BadRequest(ex.Message);
                 }
-                var experience = new Experience
+                catch (KeyNotFoundException ex)
                 {
-                    Company = newExperience.PersonCompany,
-                    Title = newExperience.PersonTitle,
-                    Years = newExperience.AmountYears,
-                    Description = newExperience.TitleDescription,
-                    Person = personToFind
-
-                };
-                personToFind.Experiences.Add(experience);
-                await context.SaveChangesAsync();
-                return Results.Ok(newExperience);
+                    return Results.NotFound(ex.Message);
+                }
 
 
 
             });
 
-            app.MapPut("experience/{id}", async (CvManagerDbContext context, int id, ExperienceDto experience) =>
+            app.MapPut("experience/{id}", async (ExperienceService service, int id, ExperienceDto experience) =>
             {
-                var validationsResults = ValidatorHelper.ValidateInput(experience);
-                if (validationsResults.Count > 0)
+                try
                 {
-                    return Results.BadRequest(validationsResults);
+                    var updatedExperience = await service.ChangeExperienceById(id, experience);
+                    return Results.Ok(updatedExperience);
                 }
-
-
-                var experienceToChange = await context.Experiences.FirstOrDefaultAsync(e => e.Id == id);
-
-                if (experienceToChange == null)
+                catch (ArgumentException ex)
                 {
-                    return Results.NotFound();
+                    return Results.BadRequest(ex.Message);
                 }
-                experienceToChange.Company = experience.PersonCompany;
-                experienceToChange.Title = experience.PersonTitle;
-                experienceToChange.Years = experience.AmountYears;
-                experienceToChange.Description = experience.TitleDescription;
-
-                await context.SaveChangesAsync();
-
-                return Results.Ok(experience);
+                catch (KeyNotFoundException ex)
+                {
+                    return Results.NotFound(ex.Message);
+                }
 
             });
 
-            app.MapDelete("experience/{id}", async (CvManagerDbContext context, int id) =>
+            app.MapDelete("experience/{id}", async (ExperienceService service, int id) =>
             {
-                var experienceToDelete = await context.Experiences.FirstOrDefaultAsync(e => e.Id == id);
-                if (experienceToDelete == null)
+                try
                 {
-                    return Results.NotFound();
+                    var deletedExperience = await service.DeleteExperience(id);
+                    return Results.Ok(deletedExperience);
                 }
-                context.Experiences.Remove(experienceToDelete);
-                await context.SaveChangesAsync();
-                return Results.Ok($"You have deleted experience with id {id}");
+                catch (KeyNotFoundException ex)
+                {
+                    return Results.NotFound(ex.Message);
+                }
+
             });
 
-            app.MapGet("experience/{id}", async (CvManagerDbContext context, int id) => 
+            app.MapGet("experience/{id}", async (ExperienceService service, int id) =>
             {
-                var experience = context.Experiences.FindAsync(id);
-                if (experience == null)
+                try
                 {
-                    return Results.NotFound();
+                    var experience = await service.GetExperienceById(id);
+                    return Results.Ok(experience);
                 }
-
-                var experienceFound = new ExperienceDto
+                catch (KeyNotFoundException ex)
                 {
-                    PersonCompany = experience.Result.Company,
-                    PersonTitle = experience.Result.Title,
-                    AmountYears = experience.Result.Years,
-                    TitleDescription = experience.Result.Description
-
-                };
-
-                return Results.Ok(experienceFound);
+                    return Results.NotFound(ex.Message);
+                }
             });
         }
 
-       
+
     }
 
 

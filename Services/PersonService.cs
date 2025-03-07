@@ -115,5 +115,25 @@ namespace RestApiCvManager.Services
             return person;
 
         }
+
+        public async Task<PersonCreateDto> CreatePerson(PersonCreateDto person)
+        {
+            var validationsResults = ValidatorHelper.ValidateInput(person);
+            if (validationsResults.Count > 0)
+            {
+                var error = string.Join(", ", validationsResults.Select(v => v.ErrorMessage));
+                throw new ArgumentException($"Invalid format in data: {error}");
+            }
+            var personToCreate = new Person
+            {
+                Name = person.PersonName,
+                Phone = person.PersonPhone,
+                Email = person.PersonEmail,
+                Description = person.PersonDescription
+            };
+            context.Persons.Add(personToCreate);
+            await context.SaveChangesAsync();
+            return person;
+        }
     }
 }

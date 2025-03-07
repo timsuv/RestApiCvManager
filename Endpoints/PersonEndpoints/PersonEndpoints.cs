@@ -58,6 +58,19 @@ namespace RestApiCvManager.Endpoints.PersonEndpoints
                 }
             });
 
+            app.MapPost("/person", async (PersonService service, PersonCreateDto personToCreate) =>
+            {
+                try
+                {
+                    var person = await service.CreatePerson(personToCreate);
+                    return Results.Ok(personToCreate);
+                }
+                catch(ArgumentException ex)
+                {
+                    return Results.BadRequest(ex.Message);
+                }
+            });
+
 
         }
 

@@ -62,6 +62,10 @@ namespace RestApiCvManager.Endpoints.ExperienceEndpoints
                 {
                     return Results.NotFound(ex.Message);
                 }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.BadRequest(ex.Message);
+                }
 
             });
 

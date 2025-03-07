@@ -27,6 +27,7 @@ namespace RestApiCvManager
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
+
             builder.Services.AddHttpClient();
 
             builder.Services.AddScoped<PersonService>();

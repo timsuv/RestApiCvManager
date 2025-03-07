@@ -35,9 +35,17 @@ namespace RestApiCvManager.Services
             {
                 throw new KeyNotFoundException("Experience not found");
             }
+
             context.Experiences.Remove(experienceToDelete);
-            await context.SaveChangesAsync();
-            
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException("Failed to delete.");
+            }
+
             return new ExperienceDto
             {
                 PersonCompany = experienceToDelete.Company,
@@ -80,9 +88,9 @@ namespace RestApiCvManager.Services
 
         public async Task<ExperienceDto> AddExperience(ExperienceDto experience, int id)
         {
-           var personToFind = await context.Persons
-                .Include(p => p.Experiences)
-                .FirstOrDefaultAsync(p => p.Id == id);
+            var personToFind = await context.Persons
+                 .Include(p => p.Experiences)
+                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (personToFind == null)
             {

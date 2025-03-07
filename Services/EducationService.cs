@@ -38,8 +38,21 @@ namespace RestApiCvManager.Services
             {
                 throw new KeyNotFoundException("Education not found");
             }
+            
             context.Educations.Remove(educationToDelete);
-            await context.SaveChangesAsync();
+
+            try
+            {
+                await context.SaveChangesAsync();
+
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException("Failed to delete.");
+            }
+
+
+
 
             return new EducationDto
             {

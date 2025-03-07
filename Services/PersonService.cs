@@ -106,6 +106,8 @@ namespace RestApiCvManager.Services
             {
                 throw new KeyNotFoundException("Person not found");
             }
+
+
             personToChange.Name = person.PersonName;
             personToChange.Phone = person.PersonPhone;
             personToChange.Email = person.PersonEmail;

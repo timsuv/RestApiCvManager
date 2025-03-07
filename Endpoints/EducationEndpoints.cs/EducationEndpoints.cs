@@ -61,6 +61,10 @@ namespace RestApiCvManager.Endpoints.EducationEndpoints.cs
                 {
                     return Results.NotFound(ex.Message);
                 }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.BadRequest(ex.Message);
+                }
 
             });
 

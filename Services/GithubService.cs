@@ -18,6 +18,7 @@ namespace RestApiCvManager.Services
 
 
             var response = await HttpClient.SendAsync(request);
+          
             if (!response.IsSuccessStatusCode)
             {
                 var errorMessage = await response.Content.ReadAsStringAsync();
@@ -32,6 +33,11 @@ namespace RestApiCvManager.Services
             };
             var data = JsonSerializer.Deserialize<List<GithubDto>>(json, options);
 
+            if (data == null)
+            {
+                throw new KeyNotFoundException("No repositories found");
+            }
+             
             if (data != null)
             {
                 foreach (var item in data)
